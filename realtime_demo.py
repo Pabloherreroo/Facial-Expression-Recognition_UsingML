@@ -3,9 +3,7 @@ import joblib
 import numpy as np
 from skimage.feature import hog
 
-# ============================================================
-# 🧩 Clase necesaria para deserializar el modelo guardado
-# ============================================================
+# Save model clas.
 class FeaturePipelineModel:
     def __init__(self, feature_extractor=None, scaler=None, pca=None, model=None):
         self.feature_extractor = feature_extractor
@@ -18,9 +16,6 @@ class FeaturePipelineModel:
         X_pca = self.pca.transform(X_scaled) if self.pca else X_scaled
         return self.model.predict(X_pca)
 
-# ============================================================
-# 🔍 HOG igual que en el entrenamiento
-# ============================================================
 def get_hog_features(pixels):
     image = np.array(pixels).reshape((48, 48))
     features = hog(
@@ -34,9 +29,7 @@ def get_hog_features(pixels):
     )
     return features
 
-# ============================================================
-# 🧠 Preprocesamiento de la cara
-# ============================================================
+# Fce preprocessing.
 def preprocess_face(face_img, model, scaler=None, pca=None, feature_type="hog"):
     gray = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
     resized = cv2.resize(gray, (48, 48))
@@ -53,7 +46,7 @@ def preprocess_face(face_img, model, scaler=None, pca=None, feature_type="hog"):
     if pca:
         features = pca.transform(features)
 
-    # ✅ Ajuste silencioso de longitud
+    # Adjustments.
     expected_features = getattr(model, "n_features_in_", None)
     if expected_features and features.shape[1] != expected_features:
         if features.shape[1] > expected_features:
@@ -64,15 +57,11 @@ def preprocess_face(face_img, model, scaler=None, pca=None, feature_type="hog"):
 
     return features
 
-# ============================================================
-# 🏷️ Emociones del dataset FER2013
-# ============================================================
+# Data set possible emotions. 
 EMOTIONS = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
 
-# ============================================================
-# 🎯 Cargar modelo guardado
-# ============================================================
-print("🔄 Cargando modelo entrenado...")
+# Load saved model. 
+print("🔄 Loading trained model...")
 bundle = joblib.load("best_emotion_model.pkl")
 
 if isinstance(bundle, FeaturePipelineModel):
@@ -86,18 +75,16 @@ else:
     pca = None
     feature_type = "hog"
 
-print("✅ Modelo cargado correctamente:")
-print(f"   - Clasificador: {model.__class__.__name__}")
+print("Model load:")
+print(f"   - Clasifiyer: {model.__class__.__name__}")
 print(f"   - Feature type: {feature_type}")
-print(f"   - PCA aplicada: {'Sí' if pca else 'No'}")
+print(f"   - PCA applied: {'Sí' if pca else 'No'}")
 
-# ============================================================
-# 📷 Iniciar cámara
-# ============================================================
+# Iniziate camara. 
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 cap = cv2.VideoCapture(0)
 
-print("\n🎥 Iniciando detección en tiempo real... (pulsa 'q' para salir)\n")
+print("\n Iniciate real time detection (Press Q to exit)\n")
 
 while True:
     ret, frame = cap.read()
@@ -116,7 +103,7 @@ while True:
             emotion_label = EMOTIONS[int(pred)] if int(pred) < len(EMOTIONS) else "Unknown"
         except Exception as e:
             emotion_label = "Error"
-            print(f"⚠️ Error procesando cara: {e}")
+            print(f" Error processing face: {e}")
 
         # Dibujar recuadro y texto
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
@@ -130,4 +117,5 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
-print("👋 Demo finalizada.")
+print("Demo ends.")
+
